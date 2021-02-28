@@ -13,6 +13,9 @@ public:
     void begin();
     void loop();
     void setRPS(double rps);
+    void setSpeed(double speed) { setRPS(speed/0.22); }
+    double getSpeed() { return _speedometer.getRPS() * 0.22;}
+    double getPower() { return _output / 255.0; }
 
 private:
     uint8_t _motor1;
@@ -27,6 +30,7 @@ private:
     double _output;
     PID _pid;
     MotorDriver _motorDrive;
+    uint8_t _direction;
 
 };
 

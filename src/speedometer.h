@@ -15,7 +15,6 @@ public:
 
     uint32_t getTachometer() { return _partialTachometer;}
 
-
 private:
     uint8_t _inputPin;
     uint8_t _lastPinState;
