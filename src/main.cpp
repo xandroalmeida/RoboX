@@ -5,36 +5,36 @@
 #include "radar.h"
 
 Chrono logChrono;
-Chrono radarChrono;
 
 Engine engineRight(3,4, A0);
 Engine engineLeft(1,2, A1);
-Radar radar(10,9);
+Radar radar(10,10, 9);
 
 void setup() {
   Serial.begin(9600);
+  logChrono.start();
   engineRight.begin();
   engineLeft.begin();
   radar.begin();
 
-  engineLeft.setSpeed(0.5);
-  engineRight.setSpeed(0.5);
+  engineLeft.setSpeed(0.2);
+  engineRight.setSpeed(0.2);
 }
 
 void loop() {
   engineRight.loop();
   engineLeft.loop();
+  radar.loop();
 
-  if (radarChrono.hasPassed(250)) {
-    radarChrono.restart();
+    #ifdef NOCODE
     if (radar.getDistance() < 50) {
-      engineLeft.setSpeed(-1);
-      engineRight.setSpeed(1);
+      engineLeft.setSpeed(-0.2);
+      engineRight.setSpeed(0.2);
     } else {
-      engineLeft.setSpeed(0.5);
-      engineRight.setSpeed(0.5);
+      engineLeft.setSpeed(0.2);
+      engineRight.setSpeed(0.2);
     }
-  }
+    #endif
 
   if (logChrono.hasPassed(1000)) {
     logChrono.restart();
