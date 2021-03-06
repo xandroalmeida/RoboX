@@ -3,21 +3,37 @@
 
 #include <stdint.h>
 #include <Servo.h>
+#include <Eventually.h>
+#include "AsyncSonarLib.h"
 
-class Radar {
+enum Direction : uint16_t {
+    Left = 135,
+    Front = 90,
+    Right = 45
+};
+
+class Radar : EvtListener, SonarCallback {
 public:
-    Radar(uint8_t triggerPin, uint8_t echoPin, uint8_t servoPin);
+    typedef Radar*(*_onPingFunc)(void);
+
+    Radar(EvtManager &evtManager, uint8_t triggerPin, uint8_t servoPin, EvtAction action);
     void begin();
     void loop();
-    float getDistance();
+    bool isEventTriggered();
+
+    unsigned int distLeft, distFront, distRight;
+    virtual void OnPing(AsyncSonar &as);
+	virtual void OnTimeOut(AsyncSonar &as);
 
 private:
-    uint8_t _triggerPin;
-    uint8_t _echoPin;
+    void _updateServo();
+    EvtManager _evtManager;
+    AsyncSonar _sonar;
     uint8_t _servoPin;
-    uint8_t _currPos;
-    Chrono _radarChono;
+    Direction _currPos;
+    bool _spin;
     Servo _servo;
-};
+    bool _shouldTrigger;
+}; 
 
 #endif

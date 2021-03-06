@@ -2,54 +2,102 @@
 #include <Chrono.h>
 #include "radar.h"
 
-Radar::Radar(uint8_t triggerPin, uint8_t echoPin, uint8_t servoPin) : 
-    _triggerPin(triggerPin),
-    _echoPin(echoPin),
+Radar::Radar(EvtManager &evtManager, uint8_t triggerPin, uint8_t servoPin, EvtAction action) : 
+    distLeft(0.0),
+    distFront(0.0),
+    distRight(0.0),
+    _evtManager(evtManager),
+    _sonar(triggerPin, *this),
     _servoPin(servoPin),
-    _currPos(90),
-    _radarChono(),
-    _servo()
+    _currPos(Front),
+    _spin(false),
+    _servo(),
+    _shouldTrigger(false)
 {
+    this->triggerAction = action;
+    _evtManager.addListener(this);
+    this->extraData = this;
+    _sonar.SetTimeOutDistance(2000);
 }
 
 void Radar::begin()
-{
-    pinMode(_triggerPin, OUTPUT);
-    pinMode(_echoPin, INPUT);
-    digitalWrite(_triggerPin, LOW);
+{   
     _servo.attach(_servoPin);
     _servo.write(_currPos);
-    _radarChono.start();
+    _sonar.Start(100);
 }
 
 void Radar::loop()
 {
-    if (_radarChono.hasPassed(100)) {
-        _radarChono.restart();
-    }
+    _sonar.Update();
 }
 
-float Radar::getDistance()
+
+void Radar::_updateServo()
 {
-    digitalWrite(_triggerPin, LOW);
-	delayMicroseconds(2);
-    digitalWrite(_triggerPin, HIGH);
-	delayMicroseconds(10);
-    digitalWrite(_triggerPin, LOW);
-    noInterrupts();
-	float d=pulseIn(_echoPin, HIGH, 58 * 2 * 100);
-	interrupts();
-
-    if (_radarChono.hasPassed(100)) {
-        _radarChono.restart();
-        _currPos += 15;
-        if (_currPos > 180) {
-            _currPos = 0;
+    if (_currPos == Left) { 
+        _currPos = Front;
+        _spin = true;
+    } else if (_currPos == Right) {
+        _currPos = Front;
+        _spin = false;
+    } else {
+        if (_spin) {
+            _currPos = Right;
+        } else {
+            _currPos = Left;
         }
-
-        _servo.write(_currPos);
+        _shouldTrigger = true;
     }
 
-	return d / 58.0;
-
+    _servo.write(_currPos);
 }
+
+
+void Radar::OnPing(AsyncSonar& as)
+{
+    switch (_currPos)
+    {
+    case Right:
+        distRight = as.GetMeasureMM(); 
+        break;
+    case Front:
+        distFront = as.GetMeasureMM();
+        _shouldTrigger = true;
+        break;
+    case Left:
+        distLeft = as.GetMeasureMM(); 
+        break;
+    }
+
+    _updateServo();
+    _sonar.Start(333);
+}
+
+void Radar::OnTimeOut(AsyncSonar& as)
+{
+    switch (_currPos)
+    {
+    case Right:
+        distRight = 0; 
+        break;
+    case Front:
+        distFront = 0; 
+        break;
+    case Left:
+        distLeft = 0; 
+        break;
+    }
+   _updateServo();
+    _sonar.Start(333);
+}
+
+bool Radar::isEventTriggered() {
+    if (_shouldTrigger) {
+        _shouldTrigger = false;
+        return true;
+    }
+    return false;
+}
+
+
