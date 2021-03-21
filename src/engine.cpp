@@ -26,7 +26,7 @@ void Engine::begin()
 
 void Engine::loop()
 {
-    _speedometer.loop();
+    /* _speedometer.loop(); */
     _input = _speedometer.getRPS();
     _pid.Compute();
     _motorDrive.motor(_motor1, _direction, _output);

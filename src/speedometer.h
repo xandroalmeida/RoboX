@@ -8,12 +8,17 @@ class Speedometer {
 public:
     Speedometer(uint8_t inputPin);
     void begin();
-    void loop();
+    /* void loop(); */
 
     float getRPM();
     float getRPS();
+    void pinChanded(bool pinstate);
 
     uint32_t getTachometer() { return _partialTachometer;}
+
+    static void pinChanded(Speedometer* _this, bool pinstate) {
+        _this->pinChanded(pinstate);
+    }
 
 private:
     uint8_t _inputPin;
