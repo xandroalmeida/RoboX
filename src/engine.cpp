@@ -1,13 +1,5 @@
 #include "engine.h"
 
-extern EvtManager evtManager;
-
-bool Engine_onTimer(EvtListener *l, EvtContext *ctx) 
-{
-    static_cast<Engine*>(l->extraData)->onTimer();
-    return false;
-}
-
 Engine::Engine(Vio *vio, ChassiSide side, uint8_t motor1, uint8_t motor2) : 
     DeviceBase(vio),
     _side(side),
@@ -26,17 +18,18 @@ Engine::Engine(Vio *vio, ChassiSide side, uint8_t motor1, uint8_t motor2) :
 
 void Engine::begin()
 {
+    DeviceBase::begin();
     _pid.SetMode(AUTOMATIC);
     _motorDrive.motor(_motor1, RELEASE, 0);
     _motorDrive.motor(_motor2, RELEASE, 0);
-
-    auto t = new EvtTimeListener(25, true, Engine_onTimer);
-    t->extraData = this;
-    evtManager.addListener(t);
-
 }
 
-void Engine::onTimer()
+uint16_t Engine::getTimeLoop()
+{
+    return 25;
+}
+
+void Engine::loop()
 {
     _setpoint = abs(_vio->getSetPointSpeed(_side));
     _input = _vio->getSpeed(_side);

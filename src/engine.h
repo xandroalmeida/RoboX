@@ -13,11 +13,10 @@ class Engine : public DeviceBase {
 public:
     Engine(Vio *vio, ChassiSide side, uint8_t motor1, uint8_t motor2);
     virtual void begin();
-    friend bool Engine_onTimer(EvtListener *l, EvtContext *ctx);
-
+protected:
+    virtual void loop();
+    virtual uint16_t getTimeLoop();
 private:
-    void onTimer();
-
     ChassiSide _side;
     uint8_t _motor1;
     uint8_t _motor2;

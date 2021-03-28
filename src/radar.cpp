@@ -19,19 +19,22 @@ Radar::Radar(Vio *vio, uint8_t triggerPin, uint8_t servoPin) :
 
 void Radar::begin()
 {   
-
-    auto t = new EvtTimeListener(10, true, [](EvtListener *l, EvtContext *ctx) {
-        static_cast<AsyncSonar*>(l->extraData)->Update();
-        return false;
-        });
-    t->extraData = &_sonar;
-    evtManager.addListener(t);
+    DeviceBase::begin();
     _sonar.SetTimeOutDistance(2000);
-
     _servo.attach(_servoPin);
     _servo.write(pgm_read_byte_near(_angles + _curPos));
     _curPos &= 0x03;
     _sonar.Start(100);
+}
+
+void Radar::loop()
+{
+    this->_sonar.Update();
+}
+
+uint16_t Radar::getTimeLoop()
+{
+    return 10;
 }
 
 void Radar::_updateServo()

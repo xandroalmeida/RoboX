@@ -3,15 +3,6 @@
 
 #include <YetAnotherPcInt.h>
 
-extern EvtManager evtManager;
-const uint16_t Speedometer::_timeout = 200;
-
-bool Speedometer_onTimer(EvtListener *l, EvtContext *ctx) 
-{
-    static_cast<Speedometer*>(l->extraData)->onTimer();
-    return false;
-}
-
 Speedometer::Speedometer(Vio *vio, ChassiSide side, uint8_t inputPin) : 
     DeviceBase(vio),
     _side(side),
@@ -24,10 +15,7 @@ Speedometer::Speedometer(Vio *vio, ChassiSide side, uint8_t inputPin) :
 
 void Speedometer::begin() 
 {
-    auto t = new EvtTimeListener(_timeout, true, Speedometer_onTimer);
-    t->extraData = this;
-    evtManager.addListener(t);
-
+    DeviceBase::begin();
     pinMode(_inputPin, INPUT);
     _vio->setSpeed(_side, 0);
     PcInt::attachInterrupt(_inputPin, Speedometer::pinChanged, this, CHANGE);
@@ -54,9 +42,14 @@ void Speedometer::pinChanged(bool pinstate)
     _lastChange = cur;
 }
 
-void Speedometer::onTimer()
+uint16_t Speedometer::getTimeLoop()
 {
-    if ((millis() - _lastChange) > _timeout) {
+    return 200;
+}
+
+void Speedometer::loop()
+{
+    if ((millis() - _lastChange) > getTimeLoop()) {
         _vio->setSpeed(_side, 0);
     }
 }

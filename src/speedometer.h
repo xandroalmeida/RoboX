@@ -13,14 +13,15 @@ public:
     virtual void begin();
     friend bool Speedometer_onTimer(EvtListener *l, EvtContext *ctx);
 
+protected:
+    virtual void loop();
+    virtual uint16_t getTimeLoop();
 private:
-    void onTimer();
     void pinChanged(bool pinstate);
     static void pinChanged(Speedometer* _this, bool pinstate) {
         _this->pinChanged(pinstate);
     }
     
-    static const uint16_t _timeout;
     ChassiSide _side;
     uint8_t _inputPin;
     unsigned long _lastChange;

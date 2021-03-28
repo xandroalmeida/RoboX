@@ -20,7 +20,9 @@ public:
 	virtual void OnTimeOut(AsyncSonar &as);
 
     friend bool Radar_Update(EvtListener *l, EvtContext *ctx);
-
+protected:
+    virtual void loop();
+    virtual uint16_t getTimeLoop();
 private:
     void _updateServo();
     uint8_t _servoPin;

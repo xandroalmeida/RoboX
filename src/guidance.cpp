@@ -2,8 +2,6 @@
 
 #include <Eventually.h>
 
-extern EvtManager evtManager;
-
 Guidance::Guidance(Vio *vio) :
     DeviceBase(vio)    
 {
@@ -11,15 +9,15 @@ Guidance::Guidance(Vio *vio) :
 
 void Guidance::begin()
 {
-    auto t = new EvtTimeListener(100, true, [](EvtListener *l, EvtContext *ctx) {
-        static_cast<Guidance*>(l->extraData)->update();    
-        return false;
-        });
-    t->extraData = this;
-    evtManager.addListener(t);
+    DeviceBase::begin();
 }
 
-void Guidance::update()
+uint16_t Guidance::getTimeLoop()
+{
+    return 100;
+}
+
+void Guidance::loop()
 {
     Serial.println(_vio->getRadarDist(Front));
     if (_vio->getRadarDist(Front) > 0 && _vio->getRadarDist(Front) < 500) {

@@ -7,8 +7,9 @@ class Guidance : DeviceBase {
 public:
     Guidance(Vio *vio);
     virtual void begin();
-private:
-    void update();
+protected:
+    virtual void loop();
+    virtual uint16_t getTimeLoop();
 };
 
 #endif
