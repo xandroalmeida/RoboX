@@ -3,63 +3,60 @@
 
 #include <YetAnotherPcInt.h>
 
+extern EvtManager evtManager;
+const uint16_t Speedometer::_timeout = 200;
 
-Speedometer::Speedometer(uint8_t inputPin) : 
+bool Speedometer_onTimer(EvtListener *l, EvtContext *ctx) 
+{
+    static_cast<Speedometer*>(l->extraData)->onTimer();
+    return false;
+}
+
+Speedometer::Speedometer(Vio *vio, ChassiSide side, uint8_t inputPin) : 
+    DeviceBase(vio),
+    _side(side),
     _inputPin(inputPin),
-    _lastPinState(0x02),
-    _tachometer(0),
-    _partialTachometer(0),
-    _lastMillis(0),
-    _currentRPS(0)
+    _lastChange(0),
+    _speeds{0},
+    _ptSpeeds(0)
 {
 }
 
 void Speedometer::begin() 
 {
+    auto t = new EvtTimeListener(_timeout, true, Speedometer_onTimer);
+    t->extraData = this;
+    evtManager.addListener(t);
+
     pinMode(_inputPin, INPUT);
-    PcInt::attachInterrupt(_inputPin, Speedometer::pinChanded, this, CHANGE);
+    _vio->setSpeed(_side, 0);
+    PcInt::attachInterrupt(_inputPin, Speedometer::pinChanged, this, CHANGE);
 }
 
-void Speedometer::pinChanded(bool pinstate)
+void Speedometer::pinChanged(bool pinstate)
 {
-    unsigned long _curMillis = millis();
-    if (_lastMillis == 0) _lastMillis = _curMillis;
-
-    _tachometer++;
-    _partialTachometer++;
-
-    if ((_curMillis - _lastMillis) > 200) {
-        _currentRPS = (_partialTachometer / 40.0) /  ((_curMillis - _lastMillis) / 1000.0);
-        _lastMillis = _curMillis;
-        _partialTachometer = 0;
-    }
-}
-
-/*
-void Speedometer::loop() {
-    unsigned long _curMillis = millis();
-    if (_lastMillis == 0) _lastMillis = _curMillis;
-
-    uint8_t state = digitalRead(_inputPin);
-    if (state != _lastPinState) {
-        _lastPinState = state;
-        _tachometer++;
-        _partialTachometer++;
+    if (pinstate) return;
+    if (_lastChange == 0) {
+        _lastChange = millis();
+        return;
     }
 
-    if ((_curMillis - _lastMillis) > 200) {
-        _currentRPS = (_partialTachometer / 40.0) /  ((_curMillis - _lastMillis) / 1000.0);
-        _lastMillis = _curMillis;
-        _partialTachometer = 0;
-    }
-}
-*/
-float Speedometer::getRPM()
-{
-    return _currentRPS * 60.0;
+    auto cur = millis();
+
+    auto speed = ((220 / 20) * 1000) / (cur - _lastChange);
+    _speeds[_ptSpeeds++] = speed;
+    _ptSpeeds &= 0x03;
+    for(uint8_t i = 0; i < 4; speed += _speeds[i++]);
+    speed /= 4;
+
+    _vio->setSpeed(_side, speed);
+    _vio->incTachometer(_side);
+    _lastChange = cur;
 }
 
-float Speedometer::getRPS()
+void Speedometer::onTimer()
 {
-    return (_lastMillis == 0 || (millis() - _lastMillis) > 200) ? 0 : _currentRPS;
+    if ((millis() - _lastChange) > _timeout) {
+        _vio->setSpeed(_side, 0);
+    }
 }

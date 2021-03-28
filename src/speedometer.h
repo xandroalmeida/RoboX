@@ -2,31 +2,30 @@
 #define _SPEEDOMETER__H_
 
 #include <stdint.h>
+#include <Eventually.h>
+#include "device_base.h"
+#include "vio.h"
 
-class Speedometer {
+class Speedometer : public DeviceBase {
 
 public:
-    Speedometer(uint8_t inputPin);
-    void begin();
-    /* void loop(); */
-
-    float getRPM();
-    float getRPS();
-    void pinChanded(bool pinstate);
-
-    uint32_t getTachometer() { return _partialTachometer;}
-
-    static void pinChanded(Speedometer* _this, bool pinstate) {
-        _this->pinChanded(pinstate);
-    }
+    Speedometer(Vio *vio, ChassiSide side, uint8_t inputPin);
+    virtual void begin();
+    friend bool Speedometer_onTimer(EvtListener *l, EvtContext *ctx);
 
 private:
+    void onTimer();
+    void pinChanged(bool pinstate);
+    static void pinChanged(Speedometer* _this, bool pinstate) {
+        _this->pinChanged(pinstate);
+    }
+    
+    static const uint16_t _timeout;
+    ChassiSide _side;
     uint8_t _inputPin;
-    uint8_t _lastPinState;
-    uint32_t _tachometer;
-    uint16_t _partialTachometer;
-    unsigned long _lastMillis;
-    float _currentRPS;
+    unsigned long _lastChange;
+    Speed _speeds[4];
+    uint8_t _ptSpeeds;
 }; 
 
 #endif
