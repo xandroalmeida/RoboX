@@ -8,7 +8,7 @@ public:
     DeviceBase(Vio *vio);
     virtual void begin();
 protected:
-    virtual void loop() {};
+    virtual void loop() = 0;
     virtual uint16_t getTimeLoop() = 0;
 
     Vio *_vio;

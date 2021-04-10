@@ -2,7 +2,6 @@
 #define _SPEEDOMETER__H_
 
 #include <stdint.h>
-#include <Eventually.h>
 #include "device_base.h"
 #include "vio.h"
 
@@ -11,7 +10,6 @@ class Speedometer : public DeviceBase {
 public:
     Speedometer(Vio *vio, ChassiSide side, uint8_t inputPin);
     virtual void begin();
-    friend bool Speedometer_onTimer(EvtListener *l, EvtContext *ctx);
 
 protected:
     virtual void loop();

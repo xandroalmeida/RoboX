@@ -1,6 +1,7 @@
 #include <Arduino.h>
 
 #include <Eventually.h>
+#include "speedometer.h"
 #include "engine.h"
 #include "radar.h"
 #include "guidance.h"

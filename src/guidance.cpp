@@ -1,7 +1,5 @@
 #include "guidance.h"
 
-#include <Eventually.h>
-
 Guidance::Guidance(Vio *vio) :
     DeviceBase(vio)    
 {
@@ -19,7 +17,6 @@ uint16_t Guidance::getTimeLoop()
 
 void Guidance::loop()
 {
-    Serial.println(_vio->getRadarDist(Front));
     if (_vio->getRadarDist(Front) > 0 && _vio->getRadarDist(Front) < 500) {
         if (_vio->getRadarDist(Right) == 0 && _vio->getRadarDist(Left) == 0) {
             _vio->setSetPointSpeed(Right, -300);
